@@ -30,6 +30,7 @@ std::vector<string> parse(string userInput) {
 
     int numCount = 0;
     int opCount = 0;
+    bool isValid = false;
     int p = 0;
 
     while (p < userInput.length()) {
@@ -41,6 +42,13 @@ std::vector<string> parse(string userInput) {
             numString.push_back(userInput[p]);
             p += 1;
             opCount += 1;
+
+            if (opCount + 1 > numCount) {
+
+                throw std::runtime_error("invalid input, got " + std::to_string(opCount) + " ops and " + std::to_string(numCount) + " nums, expected " + 
+                                        std::to_string(numCount + 1) + " ops or " + std::to_string(opCount - 1) + " nums");
+
+            }
 
         } else if (nums.find(userInput[p]) != nums.end()) {
 
@@ -69,26 +77,56 @@ std::vector<string> parse(string userInput) {
     }
 
     if (opCount + 1 != numCount) {
-        throw std::runtime_error("Invalid input, got " + std::to_string(opCount) + " OPS and " + std::to_string(numCount) + " NUMS, expected " + 
-                                 std::to_string(numCount + 1) + " OPS or " + std::to_string(opCount - 1) + " NUMS");
+        throw std::runtime_error("invalid input, got " + std::to_string(opCount) + " ops and " + std::to_string(numCount) + " nums, expected " + 
+                                 std::to_string(numCount + 1) + " ops or " + std::to_string(opCount - 1) + " nums");
     }
 
     return data;
 }
 
-int main() {
+int evaluate(std::vector<string> data) {
     Stack stack;
+    std::set<string> ops = {"+", "-", "*", "/"};
+    int val;
+
+    for (string token : data) {
+
+        switch (token.at(0)) {
+            case '+':
+                stack.push(stack.pop() + stack.pop());
+                break;
+            case '*':
+                stack.push(stack.pop() * stack.pop());
+                break;
+            case '-':
+                val = stack.pop();
+                stack.push(stack.pop() - val);
+                break;
+            case '/':
+                val = stack.pop();
+                stack.push(stack.pop() / val);
+                break;
+            default:
+                stack.push(std::stoi(token));
+        }
+    }
+
+    return stack.pop();
+
+}
+
+int main() {
+    int res;
 
     while (1) {
         string userInput;
         cout << "Write your reverse polish notation to be calculated..\n"; getline(cin, userInput);
 
         try {
-            auto valArr = parse(userInput);
-            for (auto c : valArr) {
-                cout << c << " ";
-            }
-            cout << endl;
+
+            std::vector<string> valArr = parse(userInput);
+            cout << evaluate(valArr) << endl;
+
         } catch (const std::runtime_error& e) {
             std::cerr << "Error: " << e.what() << endl;
         }
